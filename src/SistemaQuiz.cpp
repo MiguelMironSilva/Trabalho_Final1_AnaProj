@@ -171,20 +171,23 @@ public:
 
 
 // --- BUILDER  ---
+//Modificado pelo Gemini para gerar árvore
 class ExamBuilder {
     std::shared_ptr<ExamSection> root;
+    ExamComponent* currentScope; // Ponteiro bruto não-proprietário para navegação
 public:
     ExamBuilder(const std::string& title) {
         root = std::make_shared<ExamSection>(title);
+        currentScope = root.get();
     }
     ExamBuilder& addSection(const std::string& name) {
         auto sec = std::make_shared<ExamSection>(name);
-        root->add(sec);
+        currentScope->add(sec);
         return *this;
     }
     ExamBuilder& addQuestion(const std::string& text,
                              const std::string& key) {
-        root->add(QuestionFactory::createMultipleChoice(text, key));
+        currentScope->add(QuestionFactory::createMultipleChoice(text, key));
         return *this;
     }
     std::shared_ptr<ExamSection> build() { return root; }
