@@ -38,3 +38,4 @@ jobs:
             -Dsonar.organization=miguelmironsilva
             -Dsonar.projectName=Trabalho_Final1_AnaProj
             -Dsonar.cfamily.compile-commands=build_wrapper_output/compile_commands.json
+          #Velho código: --define "sonar.cfamily.compile-commands=${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json"
