@@ -23,7 +23,7 @@ jobs:
         uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v6
       - name: Run Build Wrapper
         run: |
-          build-wrapper-win-x86-64 --out-dir build_wrapper_output g++ -std=c++17 exam_patterns.cpp -o exam_patterns.exe
+          build-wrapper-win-x86-64 --out-dir build_wrapper_output g++ -std=c++17 SistemaQuizo.cpp -o SistemaQuiz.exe
        #código do DeepSeek - p/ debugar
       - name: List build output (para debug)
         run: dir build_wrapper_output /s
