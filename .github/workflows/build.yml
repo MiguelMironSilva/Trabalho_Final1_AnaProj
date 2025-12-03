@@ -23,11 +23,18 @@ jobs:
         uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v6
       - name: Run Build Wrapper
         run: |
-          build-wrapper-win-x86-64.exe --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} g++ -std=c++17 exam_patterns.cpp -o exam_patterns.exe
+          build-wrapper-win-x86-64 --out-dir build_wrapper_output g++ -std=c++17 exam_patterns.cpp -o exam_patterns.exe
+       #código do DeepSeek - p/ debugar
+      - name: List build output (para debug)
+        run: dir build_wrapper_output /s
+        #
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          args: >
-            --define "sonar.cfamily.compile-commands=${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json"
+          args: > #args do DeepSeek
+            -Dsonar.projectKey=MiguelMironSilva_Trabalho_Final1_AnaProj
+            -Dsonar.organization=miguelmironsilva
+            -Dsonar.projectName=Trabalho_Final1_AnaProj
+            -Dsonar.cfamily.compile-commands=build_wrapper_output/compile_commands.json
