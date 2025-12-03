@@ -1,3 +1,12 @@
+/*
+
+Trabalho 01 da Disciplina de Análise e Projeto de Software
+
+Autor: Miguel Miron Silva
+
+*/
+
+
 //Gerados pelo Gemini
 #include <iostream>
 #include <vector>
@@ -8,22 +17,24 @@
 #include <chrono>
 #include <stdexcept>
 
+using namespace std;
+
 // --- SINGLETON (Timer) ---
 //Modernizado pelo Kimi
 class ExamTimer {
 private:
-    std::chrono::steady_clock::time_point start;
-    std::chrono::seconds duration;
-    ExamTimer() : start(std::chrono::steady_clock::now()), duration(3600) {}
+    chrono::steady_clock::time_point start; // chrono ainda precisa do prefixo ou de outro using
+    chrono::seconds duration;
+    ExamTimer() : start(chrono::steady_clock::now()), duration(3600) {}
 public:
     static ExamTimer& getInstance() {
         static ExamTimer instance;
         return instance;
     }
     int getRemainingSeconds() {
-        auto elapsed = std::chrono::steady_clock::now() - start;
+        auto elapsed = chrono::steady_clock::now() - start;
         auto remaining = duration -
-               std::chrono::duration_cast<std::chrono::seconds>(elapsed);
+               chrono::duration_cast<chrono::seconds>(elapsed);
         return static_cast<int>(remaining.count()) > 0 ?
                static_cast<int>(remaining.count()) : 0;
     }
@@ -32,24 +43,25 @@ public:
 // --- STRATEGY (Correção) ---
 class GradingStrategy {
 public:
-    virtual bool grade(std::string answer, std::string key) = 0;
+    virtual bool grade(string answer, string key) = 0;
     virtual ~GradingStrategy() = default;
 };
 
 class ExactMatchStrategy : public GradingStrategy {
 public:
-    bool grade(std::string answer, std::string key) override {
+    bool grade(string answer, string key) override {
         return answer == key;
     }
 };
+
 
 // --- COMPOSITE (Estrutural) ---
 //Modernizado pelo Kimi - Folha, Composto e Iterator adicionados
 class ExamComponent {
 public:
     virtual void display(int depth = 0) const = 0;
-    virtual void add(std::shared_ptr<ExamComponent> c) {
-        throw std::runtime_error("Incapaz de adicionar folha!"); //Adicão do Kimi
+    virtual void add(shared_ptr<ExamComponent> c) {
+        throw runtime_error("Incapaz de adicionar folha!"); 
     }
     virtual ~ExamComponent() = default;
 };
@@ -58,51 +70,51 @@ public:
 // --- PRODUTOS ---
 // Folha
 class Question : public ExamComponent {
-    std::string text;
-    std::string key;
-    std::shared_ptr<GradingStrategy> grader;
+    string text;
+    string key;
+    shared_ptr<GradingStrategy> grader;
 public:
-    Question(const std::string& t,
-             const std::string& k,
-             std::shared_ptr<GradingStrategy> g)
-        : text(t), key(k), grader(std::move(g)) {}
+    Question(const string& t,
+             const string& k,
+             shared_ptr<GradingStrategy> g)
+        : text(t), key(k), grader(move(g)) {} // move ao invés de std::move
 
     void display(int depth = 0) const override {
-        std::string indent(depth * 2, ' ');
-        std::cout << indent << "Questao: " << text << "\n";
+        string indent(depth * 2, ' ');
+        cout << indent << "Questao: " << text << "\n";
     }
 
-    bool checkAnswer(const std::string& ans) const {
+    bool checkAnswer(const string& ans) const {
         return grader->grade(ans, key);
     }
 };
 
 // Composto
 class ExamSection : public ExamComponent {
-    std::vector<std::shared_ptr<ExamComponent>> children;
-    std::string title;
+    vector<shared_ptr<ExamComponent>> children;
+    string title;
 public:
-    explicit ExamSection(const std::string& t) : title(t) {}
+    explicit ExamSection(const string& t) : title(t) {}
 
-    void add(std::shared_ptr<ExamComponent> c) override {
-        children.push_back(std::move(c));
+    void add(shared_ptr<ExamComponent> c) override {
+        children.push_back(move(c));
     }
 
     void display(int depth = 0) const override {
-        std::string indent(depth * 2, ' ');
-        std::cout << indent << "--- SECAO: " << title << " ---\n";
+        string indent(depth * 2, ' ');
+        cout << indent << "--- SECAO: " << title << " ---\n";
         for (const auto& c : children) c->display(depth + 1);
     }
 
     // Iterator real (oculta estrutura interna)
     class Iterator {
-        using Iter = std::vector<std::shared_ptr<ExamComponent>>::iterator;
+        using Iter = vector<shared_ptr<ExamComponent>>::iterator;
         Iter curr, end;
     public:
-        Iterator(std::vector<std::shared_ptr<ExamComponent>>& vec)
+        Iterator(vector<shared_ptr<ExamComponent>>& vec)
             : curr(vec.begin()), end(vec.end()) {}
         bool hasNext() { return curr != end; }
-        std::shared_ptr<ExamComponent> next() {
+        shared_ptr<ExamComponent> next() {
             if (!hasNext()) return nullptr;
             return *curr++;
         }
@@ -113,31 +125,29 @@ public:
     }
 };
 
-
 // --- FACTORY METHOD ---
 class QuestionFactory {
 public:
-    static std::shared_ptr<Question> createMultipleChoice(std::string text, std::string key) {
-        return std::make_shared<Question>(text + " (A/B/C/D)", key, std::make_shared<ExactMatchStrategy>());
+    static shared_ptr<Question> createMultipleChoice(string text, string key) {
+        return make_shared<Question>(text + " (A/B/C/D)", key, make_shared<ExactMatchStrategy>());
     }
-    // Outros métodos de fábrica (TrueFalse, etc)...
 };
 
 // --- MEMENTO (Estado) ---
 //Modernizado pelo Kimi - adicionado respostas
 class ExamMemento {
     int currentIndex;
-    std::vector<std::string> answers;
-    std::chrono::steady_clock::time_point ts;
+    vector<string> answers;
+    chrono::steady_clock::time_point ts;
 public:
     ExamMemento(int idx,
-                std::vector<std::string> ans)
+                vector<string> ans)
         : currentIndex(idx),
-          answers(std::move(ans)),
-          ts(std::chrono::steady_clock::now()) {}
+          answers(move(ans)),
+          ts(chrono::steady_clock::now()) {}
 
     int getIndex() const { return currentIndex; }
-    const std::vector<std::string>& getAnswers() const {
+    const vector<string>& getAnswers() const {
         return answers;
     }
 };
@@ -147,9 +157,9 @@ public:
 //Modernizado pelo Kimi - adicionado respostas
 class ExamSession {
     int currentIndex = 0;
-    std::vector<std::string> answers;
+    vector<string> answers;
 public:
-    void answerQuestion(const std::string& ans) {
+    void answerQuestion(const string& ans) {
         if (currentIndex >= answers.size())
             answers.push_back(ans);
         else
@@ -173,35 +183,35 @@ public:
 // --- BUILDER  ---
 //Modificado pelo Gemini para gerar árvore
 class ExamBuilder {
-    std::shared_ptr<ExamSection> root;
-    ExamComponent* currentScope; // Ponteiro bruto não-proprietário para navegação
+    shared_ptr<ExamSection> root;
+    ExamComponent* currentScope; 
 public:
-    ExamBuilder(const std::string& title) {
-        root = std::make_shared<ExamSection>(title);
+    ExamBuilder(const string& title) {
+        root = make_shared<ExamSection>(title);
         currentScope = root.get();
     }
-    ExamBuilder& addSection(const std::string& name) {
-        auto sec = std::make_shared<ExamSection>(name);
+    ExamBuilder& addSection(const string& name) {
+        auto sec = make_shared<ExamSection>(name);
         currentScope->add(sec);
         return *this;
     }
-    ExamBuilder& addQuestion(const std::string& text,
-                             const std::string& key) {
+    ExamBuilder& addQuestion(const string& text,
+                             const string& key) {
         currentScope->add(QuestionFactory::createMultipleChoice(text, key));
         return *this;
     }
-    std::shared_ptr<ExamSection> build() { return root; }
+    shared_ptr<ExamSection> build() { return root; }
 };
 
 
 // --- CLIENTE ---
 //Modernizado pelo Kimi
 int main() {
-    // 1. Singleton
+   //Singleton
     auto& timer = ExamTimer::getInstance();
-    std::cout << "Tempo restante: " << timer.getRemainingSeconds() << "s\n";
+    cout << "Tempo restante: " << timer.getRemainingSeconds() << "s\n";
 
-    // 2. Builder + Composite
+    //Builder + Composite
     ExamBuilder builder("Prova Final de C++");
     auto prova = builder
         .addSection("Logica")
@@ -211,11 +221,11 @@ int main() {
         .addQuestion("O que e polimorfismo?", "Muitas formas")
         .build();
 
-    // 3. Display
+    //Display
     prova->display();
 
-    // 4. Iterator
-    std::cout << "\nPercorrendo com Iterator:\n";
+    //terator
+    cout << "\nPercorrendo com Iterator:\n";
     auto it = dynamic_cast<ExamSection*>(prova.get())
                   ->createIterator();
     while (it.hasNext()) {
@@ -223,15 +233,15 @@ int main() {
         comp->display();
     }
 
-    // 5. Session + Memento
+    //Session + Memento
     ExamSession session;
     session.answerQuestion("4");
     session.answerQuestion("10"); // errado
     auto checkpoint = session.save();
 
-    std::cout << "\n[Sistema caiu... Restaurando...]\n";
+    cout << "\n[Sistema caiu... Restaurando...]\n";
     session.restore(checkpoint);
-    std::cout << "Restaurado para indice: " << session.getCurrentIndex() << "\n";
+    cout << "Restaurado para indice: " << session.getCurrentIndex() << "\n";
     
     return 0;
 }
