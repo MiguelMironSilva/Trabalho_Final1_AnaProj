@@ -1,4 +1,4 @@
-name: SonarQube
+name: Build
 on:
   push:
     branches:
@@ -6,36 +6,14 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
-  build:
-    name: Build and analyze
+  sonarqube:
+    name: SonarQube
     runs-on: windows-latest
-    env:
-      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: Set up MinGW #Adicionando o g++
-        uses: egor-tensin/setup-mingw@v2
-        with:
-          platform: x64
-      - name: Install Build Wrapper
-        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v6
-      - name: Run Build Wrapper
-        run: |
-          build-wrapper-win-x86-64 --out-dir build_wrapper_output g++ -std=c++17 SistemaQuiz.cpp -o SistemaQuiz.exe
-       #código do DeepSeek - p/ debugar
-      - name: List build output (para debug)
-        run: dir build_wrapper_output /s
-        #
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: > #args do DeepSeek
-            -Dsonar.projectKey=MiguelMironSilva_Trabalho_Final1_AnaProj
-            -Dsonar.organization=miguelmironsilva
-            -Dsonar.projectName=Trabalho_Final1_AnaProj
-            -Dsonar.cfamily.compile-commands=build_wrapper_output/compile_commands.json
-          #Velho código: --define "sonar.cfamily.compile-commands=${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json"
