@@ -1,8 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Iterator;
-import java.time.Instant;
-import java.time.Duration;
 
 /*
 Trabalho 01 da Disciplina de Análise e Projeto de Software
@@ -117,12 +115,10 @@ public class SistemaQuiz {
     static class ExamMemento {
         private final int currentIndex;
         private final List<String> answers;
-        private final Instant timestamp;
 
         public ExamMemento(int idx, List<String> ans) {
             this.currentIndex = idx;
             this.answers = new ArrayList<>(ans);
-            this.timestamp = Instant.now();
         }
 
         public int getIndex() {
