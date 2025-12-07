@@ -12,36 +12,9 @@ Autor: Miguel Miron Silva
 Versão Java
 */
 
-public class ExamSystem {
+public class SistemaQuiz {
 
-    // --- SINGLETON (Timer) ---
-    static class ExamTimer {
-        private static ExamTimer instance;
-        private final Instant start;
-        private final long durationSeconds;
-
-        private ExamTimer() {
-            this.start = Instant.now();
-            this.durationSeconds = 3600; // 1 hora
-        }
-
-        // Lazy initialization (thread-safe simples)
-        public static synchronized ExamTimer getInstance() {
-            if (instance == null) {
-                instance = new ExamTimer();
-            }
-            return instance;
-        }
-
-        public long getRemainingSeconds() {
-            Instant now = Instant.now();
-            long elapsed = Duration.between(start, now).getSeconds();
-            long remaining = durationSeconds - elapsed;
-            return Math.max(remaining, 0);
-        }
-    }
-
-    // --- STRATEGY (Correção) ---
+    // --- STRATEGY ---
     interface GradingStrategy {
         boolean grade(String answer, String key);
     }
@@ -53,7 +26,7 @@ public class ExamSystem {
         }
     }
 
-    // --- COMPOSITE (Estrutural) ---
+    // --- COMPOSITE ---
     static abstract class ExamComponent {
         public abstract void display(int depth);
 
@@ -63,7 +36,7 @@ public class ExamSystem {
     }
 
     // --- PRODUTOS ---
-    // Folha (Leaf)
+    // Folha
     static class Question extends ExamComponent {
         private String text;
         private String key;
@@ -86,7 +59,7 @@ public class ExamSystem {
         }
     }
 
-    // Composto (Composite)
+    // Composto
     static class ExamSection extends ExamComponent {
         private List<ExamComponent> children = new ArrayList<>();
         private String title;
@@ -109,7 +82,7 @@ public class ExamSystem {
             }
         }
 
-        // Iterator customizado (expondo a lógica do padrão Iterator)
+        // Iterator
         public ComponentIterator createIterator() {
             return new ComponentIterator(children);
         }
@@ -132,7 +105,7 @@ public class ExamSystem {
         }
     }
 
-    // --- FACTORY METHOD ---
+    // --- FACTORY ---
     static class QuestionFactory {
         public static Question createMultipleChoice(String text, String key) {
             // Em Java, passamos a instância da estratégia
@@ -140,7 +113,7 @@ public class ExamSystem {
         }
     }
 
-    // --- MEMENTO (Estado) ---
+    // --- MEMENTO ---
     static class ExamMemento {
         private final int currentIndex;
         private final List<String> answers;
@@ -148,7 +121,6 @@ public class ExamSystem {
 
         public ExamMemento(int idx, List<String> ans) {
             this.currentIndex = idx;
-            // Importante: Deep copy da lista para preservar o estado naquele momento
             this.answers = new ArrayList<>(ans);
             this.timestamp = Instant.now();
         }
@@ -162,7 +134,7 @@ public class ExamSystem {
         }
     }
 
-    // --- SESSION (Originator) ---
+    // --- SESSION  ---
     static class ExamSession {
         private int currentIndex = 0;
         private List<String> answers = new ArrayList<>();
@@ -175,6 +147,14 @@ public class ExamSystem {
             }
             currentIndex++;
         }
+        
+        // Pega respostas
+        public String getAnswer(int index) {
+            if (index >= 0 && index < answers.size()) {
+                return answers.get(index);
+            }
+            return "(Sem resposta)";
+        }
 
         public ExamMemento save() {
             return new ExamMemento(currentIndex, answers);
@@ -182,7 +162,7 @@ public class ExamSystem {
 
         public void restore(ExamMemento m) {
             this.currentIndex = m.getIndex();
-            this.answers = new ArrayList<>(m.getAnswers()); // Restaura copiando
+            this.answers = new ArrayList<>(m.getAnswers());
         }
 
         public int getCurrentIndex() {
@@ -203,8 +183,6 @@ public class ExamSystem {
         public ExamBuilder addSection(String name) {
             ExamSection sec = new ExamSection(name);
             currentScope.add(sec);
-            // Nota: No código original C++, o scope não mudava, então as seções ficavam 
-            // como irmãs na raiz. Mantive esse comportamento.
             return this;
         }
 
@@ -218,11 +196,9 @@ public class ExamSystem {
         }
     }
 
-    // --- CLIENTE (Main) ---
+    // --- CLIENTE  ---
     public static void main(String[] args) {
-        // Singleton
-        ExamTimer timer = ExamTimer.getInstance();
-        System.out.println("Tempo restante: " + timer.getRemainingSeconds() + "s");
+        String resposta;
 
         // Builder + Composite
         ExamBuilder builder = new ExamBuilder("Prova Final de Java");
@@ -237,11 +213,9 @@ public class ExamSystem {
         // Display (Composite)
         prova.display(0);
 
-        
 
         // Iterator
         System.out.println("\nPercorrendo com Iterator:");
-        // Em Java não precisamos do dynamic_cast, pois sabemos que 'prova' é ExamSection
         ExamSection.ComponentIterator it = prova.createIterator();
         while (it.hasNext()) {
             ExamComponent comp = it.next();
@@ -259,5 +233,12 @@ public class ExamSystem {
         System.out.println("[Sistema caiu... Restaurando...]");
         session.restore(checkpoint);
         System.out.println("Restaurado para indice: " + session.getCurrentIndex());
+
+        System.out.println("Retornando respostas: ");
+        for(int i = 0; i < session.getCurrentIndex(); i++){
+            resposta = session.getAnswer(i);
+            System.out.println(resposta);
+        }
+        
     }
 }
